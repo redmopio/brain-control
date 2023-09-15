@@ -32,6 +32,7 @@ export default function Home(
 ) {
   const [selectedGroupId, setSelectedGroupId] = useState(props.groupId);
 
+  const agentsQuery = api.agents.getAll.useQuery();
   const groupsQuery = api.groups.getAll.useQuery();
   const messagesFromGroupQuery = api.groups.getMessages.useQuery(
     { id: selectedGroupId! },
@@ -53,8 +54,17 @@ export default function Home(
           </h1>
 
           <section className="flex w-full flex-col gap-4">
-            <h2 className="text-center text-3xl">Groups & Messages</h2>
+            <h2 className="text-center text-3xl">Agents</h2>
 
+            {agentsQuery.data ? (
+              <Agents agents={agentsQuery.data} />
+            ) : (
+              "Loading ..."
+            )}
+          </section>
+
+          <section className="flex w-full flex-col gap-4">
+            <h2 className="text-center text-3xl">Groups & Messages</h2>
             <div className="flex min-h-[30rem] w-full gap-4 text-lg">
               <div className="shrink-0 rounded-md bg-gray-200 p-4">
                 {groupsQuery.data ? (
@@ -77,10 +87,31 @@ export default function Home(
                 <Messages messages={messagesFromGroupQuery.data ?? []} />
               </ScrollArea>
             </div>
+            s
           </section>
         </div>
       </main>
     </>
+  );
+}
+
+function Agents({ agents }: { agents: RouterOutputs["agents"]["getAll"] }) {
+  return (
+    <ul className="flex flex-col gap-4">
+      {agents.map((agent) => {
+        const isActive = false;
+        return (
+          <Card className={clsx(isActive && "border-blue-500")} key={agent.id}>
+            <CardHeader>
+              <CardTitle>{agent.name}</CardTitle>
+              <CardDescription className="whitespace-pre-wrap">
+                {agent.constitution}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        );
+      })}
+    </ul>
   );
 }
 
@@ -103,6 +134,7 @@ function Groups({
             onClick={() => setSelectedGroupId(isActive ? null : group.id)}
             href={isActive ? "" : `/?groupId=${group.id}`}
             shallow
+            scroll={false}
           >
             <Card className={clsx(isActive && "border-blue-500")}>
               <CardHeader>

@@ -2,18 +2,17 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
 
-export const groupsRouter = createTRPCRouter({
+export const agentsRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
-    const groups = await ctx.db.group.findMany({
+    const agents = await ctx.db.agent.findMany({
       select: {
         id: true,
+        constitution: true,
         name: true,
-        description: true,
-        connector: { select: { name: true } },
       },
     });
 
-    return groups;
+    return agents;
   }),
   getMessages: publicProcedure
     .input(z.object({ id: z.string(), limit: z.number().optional() }))
