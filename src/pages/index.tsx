@@ -23,7 +23,7 @@ export const getServerSideProps = async (
 ) => {
   const groupId = context.query.groupId as string | undefined;
 
-  return { props: { groupId } };
+  return { props: { groupId: groupId ?? null } };
 };
 
 export default function Home(
@@ -84,8 +84,8 @@ function Groups({
   setSelectedGroupId,
 }: {
   groups: RouterOutputs["groups"]["getAll"];
-  selectedGroupId: string | undefined;
-  setSelectedGroupId: (id: string | undefined) => void;
+  selectedGroupId: string | null;
+  setSelectedGroupId: (id: string | null) => void;
 }) {
   return (
     <ul className="flex gap-4">
@@ -94,7 +94,7 @@ function Groups({
         return (
           <Link
             key={group.id}
-            onClick={() => setSelectedGroupId(isActive ? undefined : group.id)}
+            onClick={() => setSelectedGroupId(isActive ? null : group.id)}
             href={isActive ? "" : `/?groupId=${group.id}`}
             shallow
           >
