@@ -1,10 +1,41 @@
-import Head from "next/head";
+import type {
+  GetServerSidePropsContext,
+  InferGetServerSidePropsType,
+} from "next";
 import Link from "next/link";
+import Head from "next/head";
+import { useState } from "react";
 
-import { api } from "@/utils/api";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { api, type RouterOutputs } from "@/lib/api";
+import clsx from "clsx";
 
-export default function Home() {
-  const hello = api.example.hello.useQuery({ text: "from tRPC" });
+export const getServerSideProps = async (
+  context: GetServerSidePropsContext,
+  // eslint-disable-next-line @typescript-eslint/require-await
+) => {
+  const groupId = context.query.groupId as string | undefined;
+
+  return { props: { groupId } };
+};
+
+export default function Home(
+  props: InferGetServerSidePropsType<typeof getServerSideProps>,
+) {
+  const [selectedGroupId, setSelectedGroupId] = useState(props.groupId);
+
+  const groupsQuery = api.groups.getAll.useQuery();
+  const messagesFromGroupQuery = api.groups.getMessages.useQuery(
+    { id: selectedGroupId! },
+    { enabled: !!selectedGroupId },
+  );
 
   return (
     <>
@@ -16,37 +47,106 @@ export default function Home() {
       <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c]">
         <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
           <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
+            Brain Control
           </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 text-white hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
+
+          <div className="flex min-h-[20rem] w-full gap-4 text-lg">
+            <div className="rounded-md bg-white p-4">
+              {groupsQuery.data ? (
+                <Groups
+                  selectedGroupId={selectedGroupId}
+                  setSelectedGroupId={setSelectedGroupId}
+                  groups={groupsQuery.data}
+                />
+              ) : (
+                "Loading ..."
+              )}
+            </div>
+
+            <div className="grow rounded-md bg-white p-4">
+              {!selectedGroupId && (
+                <p className="my-auto text-center text-gray-500">
+                  Select a group to see its messages
+                </p>
+              )}
+              <Messages messages={messagesFromGroupQuery.data ?? []} />
+            </div>
           </div>
-          <p className="text-2xl text-white">
-            {hello.data ? hello.data.greeting : "Loading tRPC query..."}
-          </p>
         </div>
       </main>
     </>
+  );
+}
+
+function Groups({
+  groups,
+  selectedGroupId,
+  setSelectedGroupId,
+}: {
+  groups: RouterOutputs["groups"]["getAll"];
+  selectedGroupId: string | undefined;
+  setSelectedGroupId: (id: string | undefined) => void;
+}) {
+  return (
+    <ul className="flex gap-4">
+      {groups.map((group) => {
+        const isActive = group.id === selectedGroupId;
+        return (
+          <Link
+            key={group.id}
+            onClick={() => setSelectedGroupId(isActive ? undefined : group.id)}
+            href={isActive ? "" : `/?groupId=${group.id}`}
+            shallow
+          >
+            <Card className={clsx(isActive && "border-blue-500 bg-gray-300")}>
+              <CardHeader>
+                <CardTitle>{group.name}</CardTitle>
+                <CardDescription>
+                  {group.description} - {group.connector?.name}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </Link>
+        );
+      })}
+    </ul>
+  );
+}
+
+function Messages({
+  messages,
+}: {
+  messages: RouterOutputs["groups"]["getMessages"];
+}) {
+  const revertedMessages = [...messages].reverse();
+
+  return (
+    <ul className="flex flex-col gap-4">
+      {revertedMessages.map((message) => {
+        const isBrain = message.role === "assistant";
+        return (
+          <Card className="w-fit min-w-[16rem]" key={message.id}>
+            <CardHeader className="p-4">
+              <CardTitle>
+                {isBrain
+                  ? `Brain - Agent [${message.agent?.name}]`
+                  : message.user?.userName}
+              </CardTitle>
+              <CardDescription>Role: {message.role}</CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              <p>{message.content}</p>
+            </CardContent>
+
+            <CardFooter className="text-sm text-gray-500">
+              <p className="ml-auto">
+                {new Date(message.createdAt).toLocaleString()}
+              </p>
+            </CardFooter>
+          </Card>
+        );
+      })}
+    </ul>
   );
 }
