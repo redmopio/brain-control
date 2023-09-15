@@ -94,7 +94,7 @@ function Groups({
   setSelectedGroupId: (id: string | null) => void;
 }) {
   return (
-    <ul className="flex gap-4">
+    <ul className="flex flex-col gap-4">
       {groups.map((group) => {
         const isActive = group.id === selectedGroupId;
         return (
