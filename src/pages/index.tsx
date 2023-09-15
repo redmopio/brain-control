@@ -32,6 +32,7 @@ export default function Home(
 ) {
   const [selectedGroupId, setSelectedGroupId] = useState(props.groupId);
 
+  const usersQuery = api.users.getAll.useQuery();
   const agentsQuery = api.agents.getAll.useQuery();
   const groupsQuery = api.groups.getAll.useQuery();
   const messagesFromGroupQuery = api.groups.getMessages.useQuery(
@@ -52,6 +53,16 @@ export default function Home(
           <h1 className="text-5xl font-extrabold tracking-tight text-slate-500 sm:text-[5rem]">
             Brain Control
           </h1>
+
+          <section className="flex w-full flex-col gap-4">
+            <h2 className="text-center text-3xl">Users</h2>
+
+            {usersQuery.data ? (
+              <Users users={usersQuery.data} />
+            ) : (
+              "Loading ..."
+            )}
+          </section>
 
           <section className="flex w-full flex-col gap-4">
             <h2 className="text-center text-3xl">Agents</h2>
@@ -92,6 +103,27 @@ export default function Home(
         </div>
       </main>
     </>
+  );
+}
+
+function Users({ users }: { users: RouterOutputs["users"]["getAll"] }) {
+  return (
+    <ul className="flex flex-col gap-4">
+      {users.map((user) => {
+        const isActive = false;
+        return (
+          <Card className={clsx(isActive && "border-blue-500")} key={user.id}>
+            <CardHeader>
+              <CardTitle>{user.userName}</CardTitle>
+              <CardDescription className="whitespace-pre-wrap">
+                Whatsapp: {user.jid} | Telegram: {user.telegramId} | Total
+                messages: {user.messages?.length}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+        );
+      })}
+    </ul>
   );
 }
 
