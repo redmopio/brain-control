@@ -15,6 +15,7 @@ export const usersRouter = createTRPCRouter({
         updatedAt: true,
         messages: { select: { _count: true } },
       },
+      orderBy: [{ updatedAt: "asc" }, { userName: "asc" }],
     });
 
     return agents;
