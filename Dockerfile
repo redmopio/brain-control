@@ -31,7 +31,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build code
-RUN SKIP_ENV_VALIDATION=1 pnpm build
+RUN pnpm prisma generate && SKIP_ENV_VALIDATION=1 pnpm build
 
 
 # ------------------------------------
