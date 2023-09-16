@@ -20,21 +20,14 @@ export const usersRouter = createTRPCRouter({
 
     return agents;
   }),
-  getMessages: publicProcedure
-    .input(z.object({ id: z.string(), limit: z.number().optional() }))
-    .query(async ({ ctx, input }) => {
-      const messages = await ctx.db.message.findMany({
-        where: { groupId: input.id },
-        select: {
-          id: true,
-          content: true,
-          role: true,
-          createdAt: true,
-          agent: { select: { id: true, name: true } },
-          user: { select: { id: true, userName: true } },
-        },
-        orderBy: { createdAt: "desc" },
-        take: input.limit ?? 20,
+  updateOne: publicProcedure
+    .input(z.object({ id: z.string(), userName: z.string().optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const messages = await ctx.db.user.update({
+        where: { id: input.id },
+        data: {
+          userName: input.userName,
+        }
       });
 
       return messages;

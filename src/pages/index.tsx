@@ -15,10 +15,20 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { api, type RouterOutputs } from "@/lib/api";
 import clsx from "clsx";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 export const getServerSideProps = async (
   context: GetServerSidePropsContext,
@@ -109,6 +119,7 @@ export default function Home(
 }
 
 function Users({ users }: { users: RouterOutputs["users"]["getAll"] }) {
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   return (
     <ul className="flex flex-wrap gap-4">
       {users.map((user) => {
@@ -127,13 +138,87 @@ function Users({ users }: { users: RouterOutputs["users"]["getAll"] }) {
                 <p>Total messages: {user.messages?.length}</p>
               </CardContent>
               <CardFooter className="p-0">
-                <Button variant="outline">Edit</Button>
+                <Button
+                  onClick={() => setSelectedUserId(user.id)}
+                  variant="outline"
+                >
+                  Edit
+                </Button>
               </CardFooter>
             </CardHeader>
           </Card>
         );
       })}
+      <UserEditDialog
+        isOpen={!!selectedUserId}
+        onClose={() => setSelectedUserId(null)}
+        user={users.find((user) => user.id === selectedUserId)!}
+      />
     </ul>
+  );
+}
+
+function UserEditDialog({
+  user,
+  isOpen,
+  onClose,
+}: {
+  user: RouterOutputs["users"]["getAll"][number];
+  isOpen: boolean;
+  onClose: () => void;
+}) {
+  if (!user) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit user</DialogTitle>
+          <DialogDescription>
+            {"Make changes to this user here. Click save when you're done."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <form className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="username" className="text-right">
+              Username
+            </Label>
+            <Input
+              id="username"
+              defaultValue={user.userName ?? ""}
+              className="col-span-3"
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="whatsappId" className="text-right">
+              Whatsapp ID
+            </Label>
+            <Input
+              id="whatsappId"
+              defaultValue={user.jid ?? ""}
+              className="col-span-3"
+            />
+          </div>
+
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="telegramId" className="text-right">
+              Telegram ID
+            </Label>
+            <Input
+              id="telegramId"
+              defaultValue={user.telegramId ?? ""}
+              className="col-span-3"
+            />
+          </div>
+        </form>
+
+        <DialogFooter>
+          <Button type="submit">Save changes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
