@@ -11,6 +11,8 @@ export const usersRouter = createTRPCRouter({
         userName: true,
         phoneNumber: true,
         telegramId: true,
+        createdAt: true,
+        updatedAt: true,
         messages: { select: { _count: true } },
       },
     });

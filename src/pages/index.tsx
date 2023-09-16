@@ -4,6 +4,7 @@ import type {
 } from "next";
 import Link from "next/link";
 import Head from "next/head";
+import { formatRelative } from "date-fns";
 import { useState } from "react";
 
 import {
@@ -17,6 +18,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { api, type RouterOutputs } from "@/lib/api";
 import clsx from "clsx";
+import { Button } from "@/components/ui/button";
 
 export const getServerSideProps = async (
   context: GetServerSidePropsContext,
@@ -108,17 +110,25 @@ export default function Home(
 
 function Users({ users }: { users: RouterOutputs["users"]["getAll"] }) {
   return (
-    <ul className="flex flex-col gap-4">
+    <ul className="flex flex-wrap gap-4">
       {users.map((user) => {
-        const isActive = false;
+        const createdAt = formatRelative(user.createdAt, new Date());
+        const updatedAt = formatRelative(user.updatedAt, new Date());
         return (
-          <Card className={clsx(isActive && "border-blue-500")} key={user.id}>
+          <Card className="grow" key={user.id}>
             <CardHeader>
               <CardTitle>{user.userName}</CardTitle>
               <CardDescription className="whitespace-pre-wrap">
-                Whatsapp: {user.jid} | Telegram: {user.telegramId} | Total
-                messages: {user.messages?.length}
+                {`Created: ${createdAt}. Last updated: ${updatedAt}`}
               </CardDescription>
+              <CardContent className="whitespace-pre-wrap p-0">
+                <p>Whatsapp: {user.jid}</p>
+                <p>Telegram: {user.telegramId}</p>
+                <p>Total messages: {user.messages?.length}</p>
+              </CardContent>
+              <CardFooter className="p-0">
+                <Button variant="outline">Edit</Button>
+              </CardFooter>
             </CardHeader>
           </Card>
         );
